@@ -1,0 +1,5 @@
+timestamp,symbol,price
+1,BTC,10
+2,BTC,11
+3,BTC,12,extra
+4,BTC,13
