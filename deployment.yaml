@@ -1,0 +1,102 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cryptodemo
+  name: cryptodemo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cryptodemo
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: cryptodemo
+    spec:
+      containers:
+        - image: docker.io/library/cryptodemo:0.0.1-SNAPSHOT
+          name: cryptodemo
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cryptodemo-service
+spec:
+  # Expose the service on a static port on each node
+  # so that we can access the service from outside the cluster
+  type: NodePort
+
+  # When the node receives a request on the static port (30163)
+  # "select pods with the label 'app' set to 'echo-hostname'"
+  # and forward the request to one of them
+  selector:
+    app: cryptodemo
+
+  ports:
+    # Three types of ports for a service
+    # nodePort - a static port assigned on each the node
+    # port - port exposed internally in the cluster
+    # targetPort - the container port to send requests to
+    - nodePort: 30000
+      port: 8080
+      targetPort: 8080
+#---
+#annotations:
+#  haproxy.org/rate-limit-period: 1s
+#  haproxy.org/rate-limit-requests: 10
+#  haproxy.org/rate-limit-size: 1000
+#  haproxy.org/rate-limit-status-code: "429"
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: web-ingress
+#  namespace: default
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: http-ingress
+#spec:
+#  rules:
+#    - http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: some-service
+#                port:
+#                  number: 80
+#---
+#apiVersion: k8s.nginx.org/v1
+#kind: Policy
+#metadata:
+#  name: rate-limit-policy
+#spec:
+#  rateLimit:
+#    rate: 10r/s
+#    key: ${binary_remote_addr}
+#    zoneSize: 10M
+#---
+#apiVersion: k8s.nginx.org/v1
+#kind: VirtualServer
+#metadata:
+#  name: api-vs
+#spec:
+#  ingressClassName: nginx-api
+#  host: api.example.com
+#  policies:
+#    - name: rate-limit-policy
+#  upstreams:
+#    - name: api
+#      service: api
+#      port: 80
+#  routes:
+#    - path: /
+#      action:
+#        pass: api
